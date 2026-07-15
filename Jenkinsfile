@@ -42,4 +42,4 @@ pipeline {
     }
 }
 
-// At leas I see the request in the Jenkins logs...
+// Yeay, it worked for 'normal' pipeline. Now let's see if does work with multibranch pipeline, too!
