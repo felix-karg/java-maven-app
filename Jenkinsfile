@@ -42,4 +42,4 @@ pipeline {
     }
 }
 
-// Another try after configuring GitHub Hook
+// Maybe now after adding /github-webhook/ endpoint to URL in webhook settings
