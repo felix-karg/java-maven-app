@@ -42,4 +42,4 @@ pipeline {
     }
 }
 
-// never ending story
+// At leas I see the request in the Jenkins logs...
