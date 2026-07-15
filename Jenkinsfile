@@ -42,4 +42,4 @@ pipeline {
     }
 }
 
-// Some useless comment just to trigger pipeline by push
+// Another try after configuring GitHub Hook
