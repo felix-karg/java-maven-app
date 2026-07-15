@@ -42,4 +42,4 @@ pipeline {
     }
 }
 
-// Maybe now after adding /github-webhook/ endpoint to URL in webhook settings
+// Gets better! Now web hook gets back a 200 from its request. But pipeline does not trigger. I adjusted pipeline config again
