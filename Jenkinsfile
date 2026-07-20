@@ -51,8 +51,26 @@ pipeline {
                     gv.deployApp()
                 }
             }
-        }               
+        }
+
+        stage("commit version update") {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'github-credentials', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        sh 'git config --global user.email "jenkins@example.com"'
+                        sh 'git config --global user.name "jenkins"'
+
+                        sh 'git status'
+                        sh 'git branch'
+                        sh 'git config --list'
+
+                        sh "git remote set-url origin https://${USER}:${PASS}@github.com/felix-karg/java-maven-app.git"
+                        sh 'git add .'
+                        sh 'git commit -m "ci: version bump"'
+                        sh 'git push origin HEAD:module_8.16-increment_version'
+                    }
+                }
+            }
+        }
     }
 }
-
-// Yeay, it worked for 'normal' pipeline. Now let's see if does work with multibranch pipeline, too!
