@@ -15,7 +15,7 @@ pipeline {
                         versions:commit'
                     def matcher = readFile('pom.xml') =~ '<version>(.*)</version>'
                     def version = matcher[0][1]
-                    IMAGE_NAME = "$version-$BUILD_NUMBER"
+                    env.IMAGE_NAME = "$version-$BUILD_NUMBER"
                 }
             }
         }
@@ -30,9 +30,9 @@ pipeline {
                 script {
                     echo "building the docker image..."
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'PASS', usernameVariable: 'USER')]){
-                        sh "docker build -t ${DOCKER_REPO}:${IMAGE_NAME} ."
+                        sh "docker build -t felixkarg/demo-app:${IMAGE_NAME} ."
                         sh 'echo $PASS | docker login -u $USER --password-stdin'
-                        sh "docker push ${DOCKER_REPO}:${IMAGE_NAME}"
+                        sh "docker push felixkarg/demo-app:${IMAGE_NAME}"
                     }
                 }
             }
@@ -46,7 +46,8 @@ pipeline {
             steps {
                 script {
                    echo 'deploying docker image...'
-                   sh 'kubectl create deployment nginx-deployment --image=nginx'
+                   sh 'envsubst < kubernetes/deployment.yaml | kubectl apply -f -'
+                   sh 'envsubst < kubernetes/service.yaml | kubectl apply -f -'
                 }
             }
         }
