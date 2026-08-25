@@ -3,39 +3,58 @@ def gv
 pipeline {   
     agent any
     tools {
-        maven 'Maven'
+        maven 'maven-3.9'
     }
     stages {
-        stage("init") {
+        stage('increment version') {
             steps {
                 script {
-                    gv = load "script.groovy"
+                    echo 'incrementing app version...'
+                    sh 'mvn build-helper:parse-version versions:set \
+                        -DnewVersion=\\\${parsedVersion.majorVersion}.\\\${parsedVersion.minorVersion}.\\\${parsedVersion.nextIncrementalVersion} \
+                        versions:commit'
+                    def matcher = readFile('pom.xml') =~ '<version>(.*)</version>'
+                    def version = matcher[0][1]
+                    IMAGE_NAME = "$version-$BUILD_NUMBER"
                 }
             }
         }
-        stage("build jar") {
+        stage('build app') {
+            steps {
+                echo 'building application...'
+                sh 'mvn clean package'
+            }
+        }
+        stage('build image') {
             steps {
                 script {
-                    gv.buildJar()
-
+                    echo "building the docker image..."
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'PASS', usernameVariable: 'USER')]){
+                        sh "docker build -t ${DOCKER_REPO}:${IMAGE_NAME} ."
+                        sh 'echo $PASS | docker login -u $USER --password-stdin'
+                        sh "docker push ${DOCKER_REPO}:${IMAGE_NAME}"
+                    }
                 }
             }
         }
-
-        stage("build image") {
+        stage('deploy') {
             steps {
                 script {
-                    gv.buildImage()
+                   echo 'deploying docker image...'
                 }
             }
         }
-
-        stage("deploy") {
+        stage('commit version update'){
             steps {
                 script {
-                    gv.deployApp()
+                    withCredentials([usernamePassword(credentialsId: 'github-credentials', passwordVariable: 'PASS', usernameVariable: 'USER')]){
+                        sh "git remote set-url origin https://${USER}:${PASS}@https://github.com/felix-karg/java-maven-app.git"
+                        sh 'git add .'
+                        sh 'git commit -m "ci: version bump"'
+                        sh 'git push origin HEAD:jenkins-jobs'
+                    }
                 }
             }
-        }               
+        }            
     }
 } 
